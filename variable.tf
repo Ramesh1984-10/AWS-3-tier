@@ -13,6 +13,22 @@ variable "Public_Subnet" {
 variable "Private_Subnet" {
   default     = "10.0.1.0/24"
   description = "Private_Subnet"
+  type        = string
+}
+
+
+variable "ssh-location" {
+  default     = "0.0.0.0/0"
+  description = "SSH variable for Bastion"
+  type        = string
+}
+
+variable "instance_t" {
+  default = "t2.micro"
   type = string
 }
 
+variable "key_name" {
+default = "TEST"
+type = string
+}

@@ -102,9 +102,9 @@ resource "aws_security_group" "ssh-security-grp" {
   vpc_id      = aws_vpc.vpc.id
   ingress {
     description = "SSH Access"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
+    from_port   = 0
+    to_port     =  0
+    protocol    = "-1"
     cidr_blocks = ["${var.ssh-location}"]
   }
   egress {
@@ -160,9 +160,12 @@ associate_public_ip_address = true
 lifecycle {
 create_before_destroy = true
 }
+
+
 tags = {
 "Name" = "EC2-PUBLIC"
 }
+user_data = file("elastic_install.sh")
 }
 
 

@@ -25,10 +25,19 @@ variable "ssh-location" {
 
 variable "instance_t" {
   default = "t2.micro"
-  type = string
+  type    = string
 }
 
 variable "key_name" {
-default = "TEST"
-type = string
+  default = "TEST"
+  type    = string
+}
+
+variable "elastic" {
+  default = "elastic_install.sh"
+}
+
+variable "key_name1" {
+  default = "Tkey"
+  type    = string
 }

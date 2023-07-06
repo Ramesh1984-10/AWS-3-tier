@@ -1,43 +1,59 @@
 variable "vpc-cidr" {
-  default     = "10.0.0.0/16"
-  description = "VPC CIDR BLOCK"
-  type        = string
+  description = "CIDR Of VPC"
 }
 
-variable "Public_Subnet" {
-  default     = "10.0.0.0/24"
-  description = "Public Subnet"
-  type        = string
+variable "public_subnet_cidrs" {
+  description = "Public Subnet CIDR values"
+
 }
 
-variable "Private_Subnet" {
-  default     = "10.0.1.0/24"
-  description = "Private_Subnet"
-  type        = string
+variable "azs" {
+  description = "Availability Zones"
 }
 
+variable "private_subnet_cidrs" {
+  description = "Private Subnet CIDR values"
+}
 
 variable "ssh-location" {
-  default     = "0.0.0.0/0"
   description = "SSH variable for Bastion"
-  type        = string
 }
 
 variable "instance_t" {
-  default = "t2.micro"
-  type    = string
+  description = "Ec2 instance type"
 }
 
 variable "key_name" {
-  default = "TEST"
-  type    = string
+  description = "Public Key Name"
 }
+
+
+
+variable "key_name1" {
+  description = "Private Key Name"
+}
+
+
 
 variable "elastic" {
   default = "elastic_install.sh"
 }
 
-variable "key_name1" {
-  default = "Tkey"
-  type    = string
+
+
+variable "instance_count" {
+  description = "Ec2 instance Count"
+}
+
+variable "public_route" {
+  type        = string
+  description = "Public Route CIDR"
+  default     = "0.0.0.0/0"
+}
+
+
+variable "private_route" {
+  type        = string
+  description = "Private Route CIDR"
+  default     = "0.0.0.0/0"
 }

@@ -1,3 +1,9 @@
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+
 # Create VPC
 # terraform aws create vpc
 
@@ -6,7 +12,7 @@ resource "aws_vpc" "vpc" {
   instance_tenancy     = "default"
   enable_dns_hostnames = true
   tags = {
-    Name = "Test_vpc"
+    Name = "Test_VPC"
   }
 }
 
@@ -22,12 +28,15 @@ resource "aws_internet_gateway" "MY_IGW" {
 }
 
 
+
+
+
 # Create Public Subnet 1
 # terraform aws create subnet
 
 resource "aws_subnet" "public-subnet-1" {
   vpc_id                  = aws_vpc.vpc.id
-  cidr_block              = var.Public_Subnet
+  cidr_block              = var.public_subnet_cidrs
   availability_zone       = "ap-south-1a"
   map_public_ip_on_launch = true
   tags = {
@@ -46,31 +55,57 @@ resource "aws_route_table" "Public-RT" {
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.MY_IGW.id
+
   }
   tags = {
-    Name = "Pub-route"
+    Name = "Public-route"
   }
 }
+
 
 # Associate Public Subnet 1 to "Public Route Table"
 # terraform aws associate subnet with route table
 
 resource "aws_route_table_association" "public-RT-assocation" {
-  subnet_id      = aws_subnet.public-subnet-1.id
+  count          = length(var.public_subnet_cidrs)
+  subnet_id      = element(aws_subnet.public-subnet-1[*].id, count.index)
   route_table_id = aws_route_table.Public-RT.id
 }
 
-# Create Private Subnet 1
-# terraform aws create subnet
 
 
-resource "aws_subnet" "private-subnet-1" {
+# Private subnet creation
+resource "aws_subnet" "private" {
+  count             = length(var.private_subnet_cidrs)
   vpc_id            = aws_vpc.vpc.id
-  cidr_block        = var.Private_Subnet
-  availability_zone = "ap-south-1b"
+  cidr_block        = element(var.private_subnet_cidrs, count.index)
+  availability_zone = element(var.azs, count.index)
   tags = {
-    Name = "Private-Sub"
+    Name = "Private Subnet ${count.index + 1}"
   }
+}
+
+
+
+resource "aws_route_table" "Private-RT" {
+  vpc_id = aws_vpc.vpc.id
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.gw.id
+  }
+  tags = {
+    Name = "Private-route"
+  }
+}
+
+
+# Private Route table aws_route_table_association
+
+
+resource "aws_route_table_association" "Private-route" {
+  count          = length(var.private_subnet_cidrs)
+  subnet_id      = element(aws_subnet.private[*].id, count.index)
+  route_table_id = aws_route_table.Private-RT.id
 }
 
 // Dynamically created SSH key pair
@@ -92,81 +127,19 @@ resource "local_file" "TF_key" {
 }
 
 
-
-# Create Security Group for the Bastion Host aka Jump Box
-# terraform aws create security group
-
-resource "aws_security_group" "ssh-security-grp" {
-  name        = "SSh-security-grp-Bastion"
-  description = "Enable SSH connection for Bastion"
-  vpc_id      = aws_vpc.vpc.id
-  ingress {
-    description = "SSH Access"
-    from_port   = 0
-    to_port     =  0
-    protocol    = "-1"
-    cidr_blocks = ["${var.ssh-location}"]
-  }
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  tags = {
-    Name = "SSh security Group"
-  }
-}
-
-
-// Creation of AMI ID in AWS
-
-data "aws_ami" "MY_AMI_ID" {
-  most_recent      = true
-  #name_regex       = "^myami-\\d{3}"
-  owners = ["137112412989"]
-
-  filter {
-    name = "name"
-    #values = ["myami-*"]
-    values = ["al2023-ami-2023.1.20230629.0-kernel-6.1-x86_64"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-}
-
-output "ami_id" {
-  value = data.aws_ami.MY_AMI_ID.id
-}
-
-
-#Create a new EC2 launch configuration
+#Create a new EC2 launch configuration in PUBLIC subnet
 
 resource "aws_instance" "public-ec2" {
-ami = data.aws_ami.MY_AMI_ID.id
-key_name = "${var.key_name}"
-instance_type = "${var.instance_t}"
-subnet_id = "${aws_subnet.public-subnet-1.id}"
-security_groups = ["${aws_security_group.ssh-security-grp.id}"]
-associate_public_ip_address = true
-lifecycle {
-create_before_destroy = true
+  ami                         = data.aws_ami.amzlinux2.id
+  key_name                    = var.key_name
+  instance_type               = var.instance_t
+  subnet_id                   = aws_subnet.public-subnet-1.id
+  vpc_security_group_ids      = [aws_security_group.ssh-security-group.id]
+  associate_public_ip_address = true
+  lifecycle {
+    create_before_destroy = true
+  }
+  tags = {
+    "Name" = "EC2-PUBLIC"
+  }
 }
-
-
-tags = {
-"Name" = "EC2-PUBLIC"
-}
-user_data = file("elastic_install.sh")
-}
-
-
-

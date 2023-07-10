@@ -29,3 +29,7 @@ resource "aws_security_group" "ssh-security-group" {
     Name = "Bastion Security Group"
   }
 }
+
+output "private_security_group_id" {
+  value = resource.aws_security_group.ssh-security-group.id
+}

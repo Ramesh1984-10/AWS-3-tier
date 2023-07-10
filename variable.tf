@@ -11,8 +11,33 @@ variable "azs" {
   description = "Availability Zones"
 }
 
-variable "private_subnet_cidrs" {
+variable "private_subnet_cidr" {
   description = "Private Subnet CIDR values"
+  type        = list(string)
+}
+
+variable "subnet_tag" {
+  description = "Define Subnet Names"
+  type        = map(string)
+}
+
+variable "db_server_tag" {
+  description = "Define Server Names"
+}
+
+variable "app_server_tag" {
+  description = "Define Server Names"
+}
+
+variable "frontend_server_tag" {
+  description = "Define Server Names"
+}
+
+
+
+variable "private_route_t" {
+  description = "private route table cidr and nat gateway"
+
 }
 
 variable "ssh-location" {
@@ -39,11 +64,6 @@ variable "elastic" {
   default = "elastic_install.sh"
 }
 
-
-
-variable "instance_count" {
-  description = "Ec2 instance Count"
-}
 
 variable "public_route" {
   type        = string

@@ -21,19 +21,10 @@ variable "subnet_tag" {
   type        = map(string)
 }
 
-variable "db_server_tag" {
+variable "server_tag" {
   description = "Define Server Names"
+  type        = map(string)
 }
-
-variable "app_server_tag" {
-  description = "Define Server Names"
-}
-
-variable "frontend_server_tag" {
-  description = "Define Server Names"
-}
-
-
 
 variable "private_route_t" {
   description = "private route table cidr and nat gateway"
@@ -65,6 +56,11 @@ variable "elastic" {
 }
 
 
+
+#variable "instance_count" {
+#  description = "Ec2 instance Count"
+#}
+
 variable "public_route" {
   type        = string
   description = "Public Route CIDR"
@@ -76,4 +72,8 @@ variable "private_route" {
   type        = string
   description = "Private Route CIDR"
   default     = "0.0.0.0/0"
+}
+
+variable "instance_counts" {
+  type        = list(number)
 }

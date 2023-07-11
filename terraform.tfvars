@@ -4,24 +4,27 @@ azs                 = ["ap-south-1a", "ap-south-1b"]
 
 private_subnet_cidr = ["10.0.2.0/24", "10.0.3.0/24", "10.0.4.0/24", "10.0.5.0/24", "10.0.6.0/24", "10.0.7.0/24"]
 
+instance_counts  = [2, 1, 1, 1, 1, 1]
+
+
 
 subnet_tag = {
   db       = "Database Subnet"
   app      = "Application Subnet"
   frontend = "Frontend Subnet"
+  db1 = "Database Subnet 2"
+  app1 = "Application Subnet 2"
+  frontend1 = "Frontend Subnet 2"
 }
 
 server_tag = {
-  db       = "Database Subnet"
-  app      = "Application Subnet"
-  frontend = "Frontend Subnet"
+  db       = "Database Server"
+  app      = "Application Server"
+  frontend = "Frontend Server"
+  db2       = "Database Server 2"
+  app2      = "Application Server 2"
+  frontend2 = "Frontend Server 2"
 }
-
-
-
-db_server_tag = "Database Server"
-app_server_tag  = "Application Server"
-frontend_server_tag = "Frontend Server"
 
 
 private_route_t = "0.0.0.0/0"

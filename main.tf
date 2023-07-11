@@ -80,7 +80,7 @@ resource "aws_subnet" "private" {
   vpc_id = aws_vpc.vpc.id
   #cidr_block        = element(var.private_subnet_frontend, count.index)
   cidr_block        = var.private_subnet_cidr[count.index]
-  availability_zone = element(var.azs, count.index)
+  availability_zone = element(var.azs, count.index % length(var.azs))
   tags = {
     Name = var.subnet_tag[keys(var.subnet_tag)[count.index]]
   }
@@ -146,7 +146,6 @@ resource "local_file" "TF_key" {
   file_permission = "0400"
 }
 
-
 #Create a new EC2 launch configuration in PUBLIC subnet
 
 resource "aws_instance" "public-ec2" {
@@ -156,6 +155,26 @@ resource "aws_instance" "public-ec2" {
   subnet_id                   = aws_subnet.public-subnet-1.id
   vpc_security_group_ids      = [aws_security_group.ssh-security-group.id]
   associate_public_ip_address = true
+  provisioner "file" {
+    source      = "./${var.key_name1}"
+    destination = "/home/ec2-user/${var.key_name1}"
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = file("./${var.key_name1}")
+      host        = self.public_ip
+    }
+  }
+  provisioner "remote-exec" {
+    inline = ["chmod 400 ~/${var.key_name1}"]
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = file("./${var.key_name1}")
+      host        = self.public_ip
+    }
+
+  }
   lifecycle {
     create_before_destroy = true
   }
@@ -165,54 +184,24 @@ resource "aws_instance" "public-ec2" {
 }
 
 
+
+
 #Create a new EC2 launch configuration in Private subnet
 
 resource "aws_instance" "App_private-ec2" {
   ami                    = data.aws_ami.amzlinux2.id
   key_name               = var.key_name
   instance_type          = var.instance_t
-  count =  4
-  subnet_id              = element(aws_subnet.private[*].id, count.index)
+  count =  sum(var.instance_counts)
+  #subnet_id              = element(aws_subnet.private.id, count.index)
+  subnet_id     = aws_subnet.private[count.index % length(aws_subnet.private)].id
   vpc_security_group_ids = [aws_security_group.frontend-SG.id]
   lifecycle {
     create_before_destroy = true
   }
   tags = {
-     Name =  var.app_server_tag
+     Name =  var.server_tag[keys(var.server_tag)[count.index % length(var.server_tag)]]
   }
 }
 
 
-
-
-resource "aws_instance" "Frontend_private-ec2" {
-  ami                    = data.aws_ami.amzlinux2.id
-  key_name               = var.key_name
-  instance_type          = var.instance_t
-  count =  2
-  subnet_id              = element(aws_subnet.private[*].id, count.index)
-  vpc_security_group_ids = [aws_security_group.frontend-SG.id]
-  lifecycle {
-    create_before_destroy = true
-  }
-  tags = {
-     Name =  var.frontend_server_tag
-  }
-}
-
-
-
-resource "aws_instance" "DB_private-ec2" {
-  ami                    = data.aws_ami.amzlinux2.id
-  key_name               = var.key_name
-  instance_type          = var.instance_t
-  count =  2
-  subnet_id              = element(aws_subnet.private[*].id, count.index)
-  vpc_security_group_ids = [aws_security_group.frontend-SG.id]
-  lifecycle {
-    create_before_destroy = true
-  }
-  tags = {
-     Name =  var.db_server_tag
-  }
-}
